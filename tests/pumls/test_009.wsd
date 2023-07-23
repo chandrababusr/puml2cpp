@@ -1,2 +1,19 @@
-@startuml proj
+@startumlproj
+classX
+class Y
+    class Z {
+        + g:int
+        - meth0 ( ) :   int
+        - meth1( srs:int, par2 :      ff) :   str
+        - meth2( srs:int, par2 :      ff) :   float
+        - meth3( srs:int, par2 :      ff) :   str
+        - f: int
+    }
+    class M {
+        + g :int
+    }
+class I
+    class N {
+        # h : int
+    }
 @enduml

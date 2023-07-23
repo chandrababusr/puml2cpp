@@ -11,15 +11,18 @@ LEXER_NAME := ${PROJECT}_scanner
 LEXER_CC := ${LEXER_NAME}.cpp
 LEXER_OBJ := ${LEXER_NAME}.o
 
+CPPGEN_SRC := CppGenerator.cpp
+CPPGEN_OBJ := CppGenerator.o
+
 MAIN_SRC := main.cpp
 MAIN_OBJ := main.o
 
-PROJECT_OBJS := ${PARSER_OBJ} ${LEXER_OBJ} ${MAIN_OBJ}
+PROJECT_OBJS := ${PARSER_OBJ} ${LEXER_OBJ} ${CPPGEN_OBJ} ${MAIN_OBJ}
 
 CC := g++
 CFLAGS := -g --std=c++14 -Wall
 
-.PHONY: clean parser-clean parser main main-clean
+.PHONY: clean parser-clean parser cppgen cppgen-clean main main-clean
 
 ${PROJECT}: ${PROJECT_OBJS}
 	${CC} $(CFLAGS) ${PROJECT_OBJS} -o $@
@@ -38,6 +41,17 @@ ${MAIN_OBJ}: ${MAIN_SRC}
 main-clean:
 	rm -f ${MAIN_OBJ}
 
+
+#
+# CppGenerator rules
+#
+cppgen: ${CPPGEN_OBJ}
+
+${CPPGEN_OBJ}: ${PARSER_OBJ} ${LEXER_OBJ} ${CPPGEN_SRC}
+	${CC} ${CFLAGS} -c ${CPPGEN_SRC} -o $@
+
+cppgen-clean:
+	rm -f ${CPPGEN_OBJ}
 
 #
 # Parser rules
@@ -71,4 +85,4 @@ scanner-clean:
 #
 # Clean rule
 #
-clean: ${PROJECT}-clean parser-clean scanner-clean main-clean
+clean: ${PROJECT}-clean parser-clean scanner-clean cppgen-clean main-clean

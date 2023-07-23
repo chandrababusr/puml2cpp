@@ -1,11 +1,9 @@
 #include <iostream>
 #include <fstream>
 
-using namespace std;
+#include "CppGenerator.hpp"
 
-#define YYSTYPE PUMLSTYPE
-#include "puml2cpp_parser.hpp"
-#include "puml2cpp_scanner.hpp"
+using namespace std;
 
 int main(int argc, char **argv)
 {
@@ -18,24 +16,13 @@ int main(int argc, char **argv)
 
     string fileName{argv[1]};
 
-    fstream umlFile;
-    umlFile.open(fileName, ios::in);
+    puml::CppGenerator cppGen(fileName, "./tests/testSrc");
 
-    if (!umlFile.is_open())
-    {
-        cerr << "Error opening file " << argv[0] << endl;
-        return 2;
-    }
-
-    string testStr = "@startuml testProject @enduml";
-    puml::Scanner scanner(&umlFile);
-    puml::Parser parser(scanner);
-
-    int res = parser();
+    int res = cppGen.parse();
 
     cout << "Parsing result: " << res << endl;
 
-    umlFile.close();
+    cppGen.generate();
 
     return res;
 }

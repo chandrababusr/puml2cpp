@@ -25,6 +25,11 @@ using namespace std;
 rightcurl \{
 leftcurl  \}
 newlines  \n|\r\n{1,}
+access    [-+#]
+colon     :
+comma     ,
+leftpar   \(
+rightpar  \)
 
 %%
 
@@ -59,6 +64,31 @@ class {
     return puml::Parser::make_RIGHTCURL(puml::location());
 }
 
+{access} {
+    cout << "[puml2cpp::Scanner]: Access [" << yytext[0] << "]" << endl;
+    return puml::Parser::make_ACCESS(yytext[0], puml::location());
+}
+
+{colon} {
+    cout << "[puml2cpp::Scanner]: Colon" << endl;
+    return puml::Parser::make_COLON(puml::location());
+}
+
+{comma} {
+    cout << "[puml2cpp::Scanner]: Comma" << endl;
+    return puml::Parser::make_COMMA(puml::location());
+}
+
+{leftpar} {
+    cout << "[puml2cpp::Scanner]: Left parenthesis" << endl;
+    return puml::Parser::make_LEFTPAR(puml::location());
+}
+
+{rightpar} {
+    cout << "[puml2cpp::Scanner]: RIGHT parenthesis" << endl;
+    return puml::Parser::make_RIGHTPAR(puml::location());
+}
+
 -- {
     cout << "[puml2cpp::Scanner]: Dash" << endl;
     return puml::Parser::make_DASH(puml::location());
@@ -74,9 +104,9 @@ class {
     return puml::Parser::make_NEWLINES(puml::location());
 }
 
-[ \t]+ {
-    cout << "[puml2cpp::Scanner]: " << "BLANK" << endl;
-    return puml::Parser::make_BLANK(puml::location());
+[ \t]* {
+    cout << "[puml2cpp::Scanner]: " << "Whitespace" << endl;
+    // return puml::Parser::make_BLANK(puml::location());
 }
 
 <<EOF>> {
