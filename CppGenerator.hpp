@@ -15,6 +15,11 @@ namespace puml
         bool parsed;
         std::list<UMLClass> umlClassList;
 
+        void createSrcDirs();
+        void createSrcFiles();
+        void createHeader(UMLClass umlClass);
+        void createSrc(UMLClass umlClass);
+
     public:
         CppGenerator(std::string pumlFileName, std::string srcOutDir);
         int parse();

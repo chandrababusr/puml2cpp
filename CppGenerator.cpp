@@ -3,13 +3,17 @@
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
-// #include <sys/types.h>
+#include <vector>
+#include <sstream>
 
 #define YYSTYPE PUMLSTYPE
 #include "puml2cpp_parser.hpp"
 #include "puml2cpp_scanner.hpp"
 
 using namespace puml;
+
+#define TAB "\t"
+#define NEWLINE "\n"
 
 CppGenerator::CppGenerator(std::string pumlFileName, std::string srcOutDir) : fileName(pumlFileName),
                                                                               outDir(srcOutDir),
@@ -20,7 +24,7 @@ CppGenerator::CppGenerator(std::string pumlFileName, std::string srcOutDir) : fi
 int CppGenerator::parse()
 {
     int result = 0;
-    fstream umlFile;
+    std::fstream umlFile;
 
     if (parsed)
     {
@@ -46,6 +50,160 @@ int CppGenerator::parse()
     return result;
 }
 
+void writeToFile(std::string fileName, std::ostringstream &content)
+{
+    std::fstream fs;
+    fs.open(fileName, ios::out);
+
+    if (!fs.is_open())
+    {
+        throw std::ios_base::failure("Error opening file " + fileName);
+    }
+
+    fs << content.str();
+    fs.close();
+}
+
+std::string getHeaderGuard(std::string className)
+{
+    return className;
+}
+
+void putMethodParams(std::list<UMLVar> params, std::ostringstream &oss)
+{
+    oss << "(";
+
+    for (auto iter = params.begin(); iter != params.end(); ++iter)
+    {
+        if (iter != params.begin())
+        {
+            oss << ", ";
+        }
+        UMLVar param = *iter;
+        oss << param.type << " " << param.name;
+    }
+
+    oss << ")";
+}
+
+void putSection(char access, UMLClass umlClass, std::ostringstream &headerContent, std::string indent)
+{
+    switch (access)
+    {
+    case '+':
+        headerContent << indent << "public:" << NEWLINE;
+        break;
+
+    case '#':
+        headerContent << indent << "protected:" << NEWLINE;
+        break;
+
+    case '-':
+        headerContent << indent << "private:" << NEWLINE;
+        break;
+    }
+
+    indent += TAB;
+
+    for (UMLAttribute attribute : umlClass.attributes)
+    {
+        if (attribute.access == access)
+        {
+            headerContent << indent << attribute.value.type << " " << attribute.value.name << ";" << NEWLINE;
+        }
+    }
+    for (UMLMethod method : umlClass.methods)
+    {
+        if (method.access == access)
+        {
+            headerContent << indent << method.returnType << " " << method.name;
+            putMethodParams(method.params, headerContent);
+            headerContent << ";" << NEWLINE;
+        }
+    }
+
+    headerContent << NEWLINE;
+}
+
+void putHeaderContent(UMLClass umlClass, std::ostringstream &headerContent)
+{
+    std::string headerGuard = getHeaderGuard(umlClass.name);
+    std::string indent = "";
+
+    headerContent
+        << "#ifndef " << headerGuard << NEWLINE
+        << "#define " << headerGuard << NEWLINE
+        << NEWLINE
+        << indent << "class " << umlClass.name << NEWLINE
+        << indent << "{" << NEWLINE
+        << NEWLINE;
+
+    putSection('+', umlClass, headerContent, indent);
+    putSection('#', umlClass, headerContent, indent);
+    putSection('-', umlClass, headerContent, indent);
+
+    headerContent
+        << indent << "};" << NEWLINE
+        << NEWLINE
+        << "#endif // " << headerGuard << NEWLINE;
+}
+
+void CppGenerator::createHeader(UMLClass umlClass)
+{
+    std::string headerFileName = outDir + "/include/" + umlClass.name + ".hpp";
+    std::ostringstream headerContent;
+
+    putHeaderContent(umlClass, headerContent);
+
+    writeToFile(headerFileName, headerContent);
+}
+
+void CppGenerator::createSrc(UMLClass umlClass)
+{
+    std::string headerFileName = umlClass.name + ".hpp";
+    std::string srcFileName = outDir + "/src/" + umlClass.name + ".cpp";
+    std::ostringstream srcContent;
+
+    srcContent << "#include \"" << headerFileName << "\"" << NEWLINE;
+
+    for (auto method : umlClass.methods)
+    {
+        srcContent << NEWLINE
+                   << method.returnType << " " << umlClass.name << "::" << method.name;
+        putMethodParams(method.params, srcContent);
+        srcContent << NEWLINE
+                   << "{" << NEWLINE
+                   << "}" << NEWLINE;
+    }
+
+    writeToFile(srcFileName, srcContent);
+}
+
+void CppGenerator::createSrcFiles()
+{
+
+    for (auto umlClass : umlClassList)
+    {
+        createHeader(umlClass);
+        createSrc(umlClass);
+    }
+}
+
+void CppGenerator::createSrcDirs()
+{
+    std::vector<std::string> dirs = {outDir,
+                                     outDir + "/src",
+                                     outDir + "/include"};
+
+    for (auto dir : dirs)
+    {
+        if (-1 == mkdir(dir.c_str(), 0777))
+        {
+            throw std::runtime_error("Error creating directory " + dir);
+        }
+    }
+}
+
 int CppGenerator::generate()
 {
     if (!parsed)
@@ -60,35 +218,13 @@ int CppGenerator::generate()
         return 0;
     }
 
-    // if (-1 == mkdir(outDir.c_str(), 0777))
-    // {
-    //     throw std::runtime_error("Error creating directory " + outDir);
-    // }
+    createSrcDirs();
 
-    for (auto umlClass : umlClassList)
-    {
-        // std::cout << "Class Name: " << umlClass.name << std::endl;
-        for (auto attrib : umlClass.attributes)
-        {
-            std::cout << "Attribute: " << std::endl;
-            std::cout << "\taccess: " << attrib.access << std::endl;
-            std::cout << "\tname: " << attrib.value.name << std::endl;
-            std::cout << "\ttype: " << attrib.value.type << std::endl;
-        }
-        for (auto method : umlClass.methods)
-        {
-            std::cout << "Method: " << std::endl;
-            std::cout << "\taccess: " << method.access << std::endl;
-            std::cout << "\tname: " << method.name << std::endl;
-            for (auto param : method.params)
-            {
-                std::cout << "\tParam: " << std::endl;
-                std::cout << "\t\tname: " << param.name << std::endl;
-                std::cout << "\t\ttype: " << param.type << std::endl;
-            }
-            std::cout << "\treturn type: " << method.returnType << std::endl;
-        }
-    }
+    createSrcFiles();
+
+    // createMakefile();
+
+    // createMain();
 
     return 0;
 }
