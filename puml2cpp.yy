@@ -45,6 +45,8 @@
     }
 
     using namespace puml;
+
+    std::string umlNamespace = "";
 }
 
 %lex-param { puml::Scanner& scanner}
@@ -99,29 +101,36 @@ starttag:
 
 
 declarations:
-    named_declarations
-        { std::cout << "[puml2cpp::Parser]: named_declarations" << std::endl; }
-    | unnamed_declarations
-        { std::cout << "[puml2cpp::Parser]: unnamed_declarations" << std::endl; }
-;
-
-named_declarations:
-    NAMESPACE STRING LEFTCURL items RIGHTCURL
-        { std::cout << "[puml2cpp::Parser]: Namespace name: " << $2 << std::endl; }
-;
-
-unnamed_declarations:
-    items
-        { std::cout << "[puml2cpp::Parser]: No namespace" << std::endl; }
-;
-
-items:
     %empty
-        { std::cout << "[puml2cpp::Parser]: Empty items " << std::endl; }
-    | items class
-        { std::cout << "[puml2cpp::Parser]: Classes" << std::endl; }
-    | items relationship
-        { std::cout << "[puml2cpp::Parser]: Relationships" << std::endl; }
+    | declarations class
+    | declarations relationship
+    | declarations empty_namespace
+    | declarations namespace_start declarations namespace_end
+;
+
+empty_namespace:
+    NAMESPACE STRING LEFTCURL RIGHTCURL NEWLINES
+;
+
+namespace_start:
+    NAMESPACE STRING LEFTCURL NEWLINES
+        {
+            std::cout << "[puml2cpp::Parser]: Namespace start: " << $2 << std::endl;
+            umlNamespace = $2;
+        }
+    | NAMESPACE STRING NEWLINES LEFTCURL NEWLINES
+        {
+            std::cout << "[puml2cpp::Parser]: Namespace start: " << $2 << std::endl;
+            umlNamespace = $2;
+        }
+;
+
+namespace_end:
+    RIGHTCURL NEWLINES
+        {
+            std::cout << "[puml2cpp::Parser]: Namespace end" << std::endl;
+            umlNamespace = "";
+        }
 ;
 
 class:
@@ -132,7 +141,7 @@ class:
             std::list<UMLAttribute> la;
             std::list<UMLMethod> lm;
 
-            UMLClass umlClass{name, la, lm, ""};
+            UMLClass umlClass{name, la, lm, umlNamespace};
             umlClassList.push_back(umlClass);
         }
     | CLASS STRING LEFTCURL NEWLINES members RIGHTCURL NEWLINES
@@ -154,7 +163,7 @@ class:
                 }
             }
 
-            UMLClass umlClass{name, la, lm, ""};
+            UMLClass umlClass{name, la, lm, umlNamespace};
             umlClassList.push_back(umlClass);
         }
 ;

@@ -24,7 +24,7 @@ using namespace std;
 
 rightcurl \{
 leftcurl  \}
-newlines  \n|\r\n{1,}
+newlines  [\n]+|["\r\n"]+
 access    [-+#]
 colon     :
 comma     ,

@@ -29,7 +29,7 @@ struct UMLClass
     std::string name;
     std::list<UMLAttribute> attributes;
     std::list<UMLMethod> methods;
-    std::string theNamespace;
+    std::string umlNamespace;
     // std::string extends;
 };
 

@@ -66,7 +66,14 @@ void writeToFile(std::string fileName, std::ostringstream &content)
 
 std::string getHeaderGuard(std::string className)
 {
-    return className;
+    std::string guard = className;
+
+    for (size_t i = 0; i < guard.size(); ++i)
+    {
+        guard[i] = toupper(guard[i]);
+    }
+
+    return guard + "_H";
 }
 
 void putMethodParams(std::list<UMLVar> params, std::ostringstream &oss)
@@ -133,7 +140,15 @@ void putHeaderContent(UMLClass umlClass, std::ostringstream &headerContent)
     headerContent
         << "#ifndef " << headerGuard << NEWLINE
         << "#define " << headerGuard << NEWLINE
-        << NEWLINE
+        << NEWLINE;
+
+    if (umlClass.umlNamespace.size() > 0)
+    {
+        headerContent << "namespace " << umlClass.umlNamespace << " {" << NEWLINE;
+        indent = TAB;
+    }
+
+    headerContent
         << indent << "class " << umlClass.name << NEWLINE
         << indent << "{" << NEWLINE
         << NEWLINE;
@@ -143,7 +158,14 @@ void putHeaderContent(UMLClass umlClass, std::ostringstream &headerContent)
     putSection('-', umlClass, headerContent, indent);
 
     headerContent
-        << indent << "};" << NEWLINE
+        << indent << "};" << NEWLINE;
+
+    if (umlClass.umlNamespace.size() > 0)
+    {
+        headerContent << "}" << NEWLINE;
+    }
+
+    headerContent
         << NEWLINE
         << "#endif // " << headerGuard << NEWLINE;
 }
@@ -165,6 +187,11 @@ void CppGenerator::createSrc(UMLClass umlClass)
     std::ostringstream srcContent;
 
     srcContent << "#include \"" << headerFileName << "\"" << NEWLINE;
+
+    if (umlClass.umlNamespace.size() > 0)
+    {
+        srcContent << NEWLINE << "using namespace " << umlClass.umlNamespace << ";" << NEWLINE;
+    }
 
     for (auto method : umlClass.methods)
     {

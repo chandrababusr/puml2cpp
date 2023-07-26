@@ -1,0 +1,37 @@
+@startuml proj
+
+
+class SomeEmpty
+namespace empty 
+{
+
+}
+
+namespace bigpackage {
+
+class Big1
+
+
+class Big2
+    class OOPSClass {
+        + openVar:int
+        - emptyMethod ( )
+        # methodOne( par1:int, par2 :      float) :   string
+        + someMethod( c:char, str:      string) :   string
+
+        - bigMethod( big1:Big1, big2 :      Big2) :   Big2
+
+        - important: int
+        # veryImportant: Big1
+    }
+}
+
+    class SingleMembered {
+        + g :int
+    }
+class ActualEmpty 
+
+    class OnlyForInherited {
+        # h : int
+    }
+@enduml
