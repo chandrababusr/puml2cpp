@@ -30,7 +30,7 @@ struct UMLClass
     std::list<UMLAttribute> attributes;
     std::list<UMLMethod> methods;
     std::string umlNamespace;
-    // std::string extends;
+    std::string inherits;
 };
 
 #endif

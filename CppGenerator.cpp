@@ -142,14 +142,27 @@ void putHeaderContent(UMLClass umlClass, std::ostringstream &headerContent)
         << "#define " << headerGuard << NEWLINE
         << NEWLINE;
 
-    if (umlClass.umlNamespace.size() > 0)
+    if (!umlClass.inherits.empty())
+    {
+        headerContent
+            << "#include \"" << umlClass.inherits << ".hpp\"" << NEWLINE
+            << NEWLINE;
+    }
+
+    if (!umlClass.umlNamespace.empty())
     {
         headerContent << "namespace " << umlClass.umlNamespace << " {" << NEWLINE;
         indent = TAB;
     }
 
     headerContent
-        << indent << "class " << umlClass.name << NEWLINE
+        << indent << "class " << umlClass.name;
+    if (!umlClass.inherits.empty())
+    {
+        headerContent << ": public " << umlClass.inherits;
+    }
+    headerContent
+        << NEWLINE
         << indent << "{" << NEWLINE
         << NEWLINE;
 
@@ -160,7 +173,7 @@ void putHeaderContent(UMLClass umlClass, std::ostringstream &headerContent)
     headerContent
         << indent << "};" << NEWLINE;
 
-    if (umlClass.umlNamespace.size() > 0)
+    if (!umlClass.umlNamespace.empty())
     {
         headerContent << "}" << NEWLINE;
     }
@@ -188,7 +201,7 @@ void CppGenerator::createSrc(UMLClass umlClass)
 
     srcContent << "#include \"" << headerFileName << "\"" << NEWLINE;
 
-    if (umlClass.umlNamespace.size() > 0)
+    if (!umlClass.umlNamespace.empty())
     {
         srcContent << NEWLINE << "using namespace " << umlClass.umlNamespace << ";" << NEWLINE;
     }

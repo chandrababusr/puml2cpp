@@ -30,6 +30,8 @@ colon     :
 comma     ,
 leftpar   \(
 rightpar  \)
+larrow    "<|-- "
+rarrow    "--|>"
 
 %%
 
@@ -89,9 +91,14 @@ class {
     return puml::Parser::make_RIGHTPAR(puml::location());
 }
 
--- {
-    cout << "[puml2cpp::Scanner]: Dash" << endl;
-    return puml::Parser::make_DASH(puml::location());
+{larrow} {
+    cout << "[puml2cpp::Scanner]: Left arrow " << yytext << endl;
+    return puml::Parser::make_LARROW(puml::location());
+}
+
+{rarrow} {
+    cout << "[puml2cpp::Scanner]: Right arrow " << yytext << endl;
+    return puml::Parser::make_RARROW(puml::location());
 }
 
 [a-zA-Z_][a-zA-Z_0-9]* {

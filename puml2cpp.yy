@@ -36,6 +36,7 @@
 %code top
 {
     #include <iostream>
+    #include <map>
     #include "puml2cpp_scanner.hpp"
     #include "puml2cpp_parser.hpp"
     #include "UMLStructure.hpp"
@@ -47,6 +48,7 @@
     using namespace puml;
 
     std::string umlNamespace = "";
+    std::map<std::string, std::string> inherits;
 }
 
 %lex-param { puml::Scanner& scanner}
@@ -71,7 +73,8 @@
 %token COMMA "comma"
 %token LEFTPAR "left parenthesis"
 %token RIGHTPAR "right parenthesis"
-%token DASH "dash"
+%token LARROW "left arrow"
+%token RARROW "right arrow"
 %token END 0 "end of file"
 
 %type <UMLVar> var;
@@ -89,7 +92,19 @@
 
 pumlroot:
     starttag declarations ENDTAG
-        { std::cout << "[puml2cpp::Parser]: Project root" << std::endl; }
+        {
+            std::cout << "[puml2cpp::Parser]: Project root" << std::endl;
+
+            for(auto inheritPair: inherits)
+            {
+                std::cout << "[puml2cpp::Parser]: " << inheritPair.first << " inherits " << inheritPair.second << std::endl;
+            }
+
+            for(auto& umlClass: umlClassList)
+            {
+                umlClass.inherits = inherits[umlClass.name];
+            }
+        }
 ;
 
 starttag:
@@ -253,8 +268,16 @@ attribute:
 ;
 
 relationship:
-    STRING DASH STRING
-        { std::cout << "[puml2cpp::Parser]: Dash" << std::endl; }
+    STRING LARROW STRING NEWLINES
+        {
+            inherits[$3] = $1;
+            std::cout << "[puml2cpp::Parser]: "<< $1 << " is inherited by " << $3 << std::endl;
+        }
+    | STRING RARROW STRING NEWLINES
+        {
+            inherits[$1] = $3;
+            std::cout << "[puml2cpp::Parser]: "<< $1 << " inherits " << $3 << std::endl;
+        }
 ;
 
 %%
