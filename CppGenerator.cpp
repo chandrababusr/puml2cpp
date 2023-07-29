@@ -233,6 +233,7 @@ void CppGenerator::createSrcDirs()
 {
     std::vector<std::string> dirs = {outDir,
                                      outDir + "/src",
+                                     outDir + "/obj",
                                      outDir + "/include"};
 
     for (auto dir : dirs)
@@ -242,6 +243,74 @@ void CppGenerator::createSrcDirs()
             throw std::runtime_error("Error creating directory " + dir);
         }
     }
+}
+
+void CppGenerator::createMain()
+{
+    std::string fileName = outDir + "/main.cpp";
+    std::ofstream mainFile(fileName, ios::out);
+
+    if (!mainFile.is_open())
+    {
+        throw std::ios_base::failure("Error opening file " + fileName);
+    }
+
+    mainFile
+        << "#include <iostream>" << NEWLINE
+        << NEWLINE
+        << "using namespace std;" << NEWLINE
+        << NEWLINE
+        << "int main(int argc, char **argv)" << NEWLINE
+        << "{" << NEWLINE
+        << TAB << "cout<<\"Hello World!\"<<endl;" << NEWLINE
+        << TAB << "return 0;" << NEWLINE
+        << "}" << NEWLINE;
+
+    mainFile.close();
+}
+
+void CppGenerator::createMakefile()
+{
+    std::string fileName = outDir + "/Makefile";
+    std::ofstream makeFile(fileName, ios::out);
+
+    if (!makeFile.is_open())
+    {
+        throw std::ios_base::failure("Error opening file " + fileName);
+    }
+
+    makeFile
+        << "SRCDIR := ./src" << NEWLINE
+        << "INCDIR := ./include" << NEWLINE
+        << "OBJDIR := ./obj" << NEWLINE
+        << NEWLINE
+        << "SRCS := $(wildcard $(SRCDIR)/*.cpp)" << NEWLINE
+        << NEWLINE
+        << "MAINOBJ := ${OBJDIR}/main.o" << NEWLINE
+        << "MAINSRC := main.cpp" << NEWLINE
+        << NEWLINE
+        << "OBJS = $(patsubst ${SRCDIR}/%.cpp,$(OBJDIR)/%.o,${SRCS}) ${MAINOBJ}" << NEWLINE
+        << NEWLINE
+        << "CC := g++" << NEWLINE
+        << "CFLAGS := -Wall" << NEWLINE
+        << NEWLINE
+        << ".PHONY: all clean" << NEWLINE
+        << NEWLINE
+        << "all: a.out" << NEWLINE
+        << NEWLINE
+        << "a.out: ${OBJS}" << NEWLINE
+        << "\t$(CC) $(CFLAGS) ${OBJS}" << NEWLINE
+        << NEWLINE
+        << "${OBJDIR}/%.o: ${SRCDIR}/%.cpp" << NEWLINE
+        << "\t$(CC) -c -I${INCDIR} ${CFLAGS} $< -o $@" << NEWLINE
+        << NEWLINE
+        << "${MAINOBJ}: ${MAINSRC}" << NEWLINE
+        << "\t$(CC) -c -I${INCDIR} ${CFLAGS} $< -o $@" << NEWLINE
+        << NEWLINE
+        << "clean:" << NEWLINE
+        << "\trm -f ${OBJS} a.out" << NEWLINE;
+
+    makeFile.close();
 }
 
 int CppGenerator::generate()
@@ -262,9 +331,9 @@ int CppGenerator::generate()
 
     createSrcFiles();
 
-    // createMakefile();
+    createMain();
 
-    // createMain();
+    createMakefile();
 
     return 0;
 }

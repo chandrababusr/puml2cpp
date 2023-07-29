@@ -19,6 +19,8 @@ namespace puml
         void createSrcFiles();
         void createHeader(UMLClass umlClass);
         void createSrc(UMLClass umlClass);
+        void createMain();
+        void createMakefile();
 
     public:
         CppGenerator(std::string pumlFileName, std::string srcOutDir);
